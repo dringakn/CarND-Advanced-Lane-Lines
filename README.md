@@ -40,7 +40,7 @@ The following Jupyter notebook contains the solution ![code][Code].
 ### Camera Calibration
 
 
-The code for this step is contained in the first code cell of the Jupyter notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the first code cell of the Jupyter notebook located in "./solution.ipynb".
 
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
 
@@ -48,77 +48,82 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 ![alt text][image1]
 
+
 ### Pipeline (single images)
 
-#### 1. Provide an example of a distortion-corrected image.
+#### 1. Example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+Here is an example test image corrected after applying the `undistortImage()` function defined in the second cell of the ![solution notebook][Code]:
+
 ![alt text][image2]
 
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+#### 2. Use color transforms, gradients, etc., to create a thresholded binary image.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I created an `RGB2HLS()` function for the color transform in the fourth cell of the ![solution notebook][Code]. The function Convert the input image from RGB colorspace to HLS colorsapce. It returns all three channels as three images. Here is an example output for this step.
 
 ![alt text][image3]
 
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
-
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
-
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
-
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
-
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+Afterewards, I created a `binarizeImage()` function in the fifth cell of the ![solution notebook][Code]. It takes as input a single channel image, orientation parameter, threshold minimum and maxim value, and the kernal size. It applies a Sobel derivative according to the orientation parameter followed by scaling [0,1]. Finally, the image is binarized according to the minimum and maximum threshold values. Here is a sample output of this function:
 
 ![alt text][image4]
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
-
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+Then, I created a `thresholdImage()` function also in the fifth cell of of the ![solution notebook][Code]. It takes as an argument, HLS channel images, minimum/maximum binary/color threholds, and the kernal size. It calculates the Sobel x-derivative of the L-channel and binarize it. Afterwards, it threshold the S-channel. The function returns two images, a pseudo color image, and the combined binarize image. Here is a sample output of this function:
 
 ![alt text][image5]
 
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+#### 3. Apply a perspective transform to rectify binary image ("birds-eye view").
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
-
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+The code for my perspective transform includes a function called `imageTransform()`, which appears in the sixth cell of the ![solution notebook][Code].  The function takes as input a single-channel image. It defines a ROI and apply perspective transform to wrap an image (birds eye-view). Here is an example output of the transform:
 
 ![alt text][image6]
 
+#### 4. Detect lane pixels and fit to find the lane boundary?
+
+I defined a `histogram()` function to initialize the location of left and right lane. The function is defined at the start of the seventh cell of the ![solution notebook][Code]. Here is an example output of the function on the test image:
+
+![alt text][image7]
+
+Then I created a `slidingWindow()` also on the seventh cell of the ![solution notebook][Code]. The function detects the land boundaries, afterwards, apply a second order poly-nomial fit to find curve lines.
+Here is an example output of the function on the test image:
+
+![alt text][image8]
+
+#### 5. Determine the curvature of the lane and vehicle position with respect to center.
+
+The code to determine road curvature and vehicle offset from the center is defined by function called `calculateROC()`, which appears in the eigth cell of the ![solution notebook][Code]. The function takes as input a warped image and the left and right lane polynomial. It calculates the average ROC and the offset from the middle bottom. 
+
+
+#### 6. Warp the detected lane boundaries back onto the original image.
+
+The code to display to unwarp the results back to road is defined inside  `drawLineBoundaries()` function, which appears on the ninth cell of the ![solution notebook][Code]. The function takes as input the undistorted image, Warped image, left/right lanes polynomials. It unwarp the image and draw line boundries on the undistorted image. Here is an example of my result on a test image:
+
+![alt text][image9]
+
+Here is an example of the final annotated image:
+
+![alt text][image10]
 ---
 
 ### Pipeline (video)
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
-
-Here's a [link to my video result](./project_video.mp4)
+#### 1. Here's a [link to my video result](./project_video_output.mp4)
 
 ---
 
-### Discussion
+### Reflection
 
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+The project uses image processing and computer vision techniques to find road lanes, road curvature and the vehicle position offset. Ofcourse, it's cann't be generalized out of the box for real lane following under all conditions.
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+The pipeline is sensitive to the enviorment conditions such as changing light conditions and shadows. Various parameters such as used for the binirization process are also citical to the system output. The lack of tunning metric also makes it harder to tune. One relies on the visual output of the algorithm. The combinations of various channels inside `thresholdImage()` is also very tricky.
+
+
+The process may fail during snow and during rain conditions. In order to improve the execution performance of the pipeline, it can be implemented in C/C++.
+
+For future work, various other colorspaces may also be tried.
+Correct determination of the src and dst points inside the `imageTransform()` are also critical.
+
+
+In case of incoming traffic the solution might fail, in such condition, object detection might help.
+
+
